@@ -7,7 +7,6 @@
 var app = require('../app');
 var debug = require('debug')('ptcg-express-api:server');
 var http = require('http');
-debug("test");
 /**
  * Get port from environment and store in Express.
  */
