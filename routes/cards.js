@@ -3,6 +3,8 @@ const router = express.Router();
 
 const createClient = require('../lib/mongodb')
 
+const { searchCards, allCards } = require('../controllers/cards');
+
 /* 
     /cards/:series?page=1&pageLength=20
     responds with an array of cards
@@ -10,21 +12,10 @@ const createClient = require('../lib/mongodb')
     req.body.options for options https://docs.mongodb.com/drivers/node/usage-examples/find
 */
 router.get('/', async (req, res) => {
-    const client = createClient();
-    try {
-        await client.connect();
-        const collection = client.db('ptcg').collection('cards');
-        const cursor = await collection.find(req.body.query, req.body.options);
-
-        const pageLength = req.query.pageLength ? parseInt(req.query.pageLength) : 20;
-        const pageIdx = req.query.page ? parseInt(req.query.page) : 0;
-
-        const page = await cursor.skip(pageLength * pageIdx).limit(pageLength).toArray();
-        res.send(page);
-    } catch (e) {
-        res.status(500).end(e.toString());
-    } finally {
-        client.close();
+    if (req.query.search) {
+        searchCards(req, res);
+    } else {
+        allCards(req, res);
     }
 })
 /* 
