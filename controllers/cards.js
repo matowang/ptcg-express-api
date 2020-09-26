@@ -11,11 +11,11 @@ const projection = {
 }
 
 const sendPage = async (req, res) => {
-    const pageLength = req.query.pageLength ? parseInt(req.query.pageLength) : 20;
-    const pageIdx = req.query.page ? parseInt(req.query.page) : 0;
+    const pageLength = req.query.limit ? parseInt(req.query.limit) : 20;
+    const pageIdx = req.query.page ? parseInt(req.query.page) : 1;
 
     const page = await req.cursor
-        .skip(pageLength * pageIdx)
+        .skip(pageLength * (pageIdx - 1))
         .limit(pageLength)
         .toArray();
 
@@ -23,7 +23,7 @@ const sendPage = async (req, res) => {
 }
 
 
-exports.searchCards = async (req, res, next) => {
+exports.searchCards = async (req, res) => {
     const client = createClient();
     try {
         await client.connect();
@@ -48,13 +48,43 @@ exports.searchCards = async (req, res, next) => {
     }
 }
 
-exports.allCards = async (req, res, next) => {
+exports.allCards = async (req, res) => {
     const client = createClient();
     try {
         await client.connect();
         const collection = client.db('ptcg').collection('cards');
-        req.cursor = collection.find(req.body.query, req.body.options);
+        req.cursor = collection.find(req.body.query, req.body.options)
+            .project(projection);
         await sendPage(req, res);
+    } catch (e) {
+        res.status(500).end(e.toString());
+    } finally {
+        client.close();
+    }
+}
+
+exports.cardsFromSeries = async (req, res) => {
+    const client = createClient();
+    try {
+        await client.connect();
+        const collection = client.db('ptcg').collection('cards');
+        req.cursor = await collection.find(req.params, req.body);
+
+        await sendPage(req, res);
+    } catch (e) {
+        res.status(500).end(e.toString());
+    } finally {
+        client.close()
+    }
+}
+
+exports.oneCard = async (req, res) => {
+    const client = createClient()
+    try {
+        await client.connect();
+        const collection = client.db('ptcg').collection('cards');
+        const card = await collection.findOne(req.params, req.body);
+        res.send(card);
     } catch (e) {
         res.status(500).end(e.toString());
     } finally {
