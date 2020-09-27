@@ -1,5 +1,3 @@
-const createClient = require('../lib/mongodb')
-
 const projection = {
     name: 1,
     imageUrl: 1,
@@ -22,72 +20,41 @@ const sendPage = async (req, res) => {
     res.send(page)
 }
 
-
-exports.searchCards = async (req, res) => {
-    const client = createClient();
+exports.allCards = async (req, res, next) => {
     try {
-        await client.connect();
-        const collection = client.db('ptcg').collection('cards');
-        req.cursor = collection.aggregate([
-            {
+        const stages = []
+        if (req.query.search) {
+            stages.push({
                 $search: {
                     text: {
                         query: req.query.search,
                         path: "name"
                     }
                 }
-            }
-        ])
-            .project(projection);
+            })
+        }
+        let cursor = req.collection.aggregate(stages).project(projection);
+        req.cursor = cursor;
         await sendPage(req, res);
-    } catch (e) {
-        console.log(e);
-        res.status(500).end(e.toString());
-    } finally {
-        client.close();
+    } catch (err) {
+        next(err);
     }
 }
 
-exports.allCards = async (req, res) => {
-    const client = createClient();
+exports.cardsFromSeries = async (req, res, next) => {
     try {
-        await client.connect();
-        const collection = client.db('ptcg').collection('cards');
-        req.cursor = collection.find(req.body.query, req.body.options)
-            .project(projection);
+        req.cursor = await req.collection.find(req.params, req.body);
         await sendPage(req, res);
-    } catch (e) {
-        res.status(500).end(e.toString());
-    } finally {
-        client.close();
+    } catch (err) {
+        next(err);
     }
 }
 
-exports.cardsFromSeries = async (req, res) => {
-    const client = createClient();
+exports.oneCard = async (req, res, next) => {
     try {
-        await client.connect();
-        const collection = client.db('ptcg').collection('cards');
-        req.cursor = await collection.find(req.params, req.body);
-
-        await sendPage(req, res);
-    } catch (e) {
-        res.status(500).end(e.toString());
-    } finally {
-        client.close()
-    }
-}
-
-exports.oneCard = async (req, res) => {
-    const client = createClient()
-    try {
-        await client.connect();
-        const collection = client.db('ptcg').collection('cards');
-        const card = await collection.findOne(req.params, req.body);
+        const card = await req.collection.findOne(req.params, req.body);
         res.send(card);
-    } catch (e) {
-        res.status(500).end(e.toString());
-    } finally {
-        client.close();
+    } catch (err) {
+        next(err);
     }
 }
