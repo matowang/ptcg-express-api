@@ -43,7 +43,25 @@ exports.allCards = async (req, res, next) => {
 
 exports.cardsFromSeries = async (req, res, next) => {
     try {
-        req.cursor = await req.collection.find(req.params, req.body);
+        const stages = [];
+        if (req.query.search) {
+            stages.push({
+                $search: {
+                    text: {
+                        query: req.query.search,
+                        path: "name"
+                    }
+                }
+            })
+        }
+        stages.push({
+            $match: {
+                series: {
+                    $regex: `(?i)^${req.params.series}`
+                }
+            }
+        })
+        req.cursor = await req.collection.aggregate(stages).project(projection);
         await sendPage(req, res);
     } catch (err) {
         next(err);
