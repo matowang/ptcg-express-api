@@ -1,4 +1,5 @@
 const projection = {
+    cardId: 1,
     name: 1,
     imageUrl: 1,
     subtype: 1,
@@ -22,7 +23,6 @@ const sendPage = async (req, res) => {
 }
 
 exports.allCards = async (req, res, next) => {
-    console.log("ac");
     try {
         const stages = []
         if (req.query.search) {
@@ -44,7 +44,6 @@ exports.allCards = async (req, res, next) => {
 }
 
 exports.cardsFromSeries = async (req, res, next) => {
-    console.log("cfs");
     try {
         const stages = [];
         if (req.query.search) {
@@ -72,7 +71,6 @@ exports.cardsFromSeries = async (req, res, next) => {
 }
 
 exports.oneCard = async (req, res, next) => {
-    console.log("on");
     try {
         const card = await req.collection.findOne(req.params, req.body);
         res.send(card);
@@ -84,7 +82,6 @@ exports.oneCard = async (req, res, next) => {
 
 exports.cardsFromIds = async (req, res, next) => {
     const cardIds = req.params.ids.split("+");
-    console.log(cardIds);
     try {
         const stages = [];
         stages.push({
