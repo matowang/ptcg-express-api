@@ -22,6 +22,7 @@ const sendPage = async (req, res) => {
 }
 
 exports.allCards = async (req, res, next) => {
+    console.log("ac");
     try {
         const stages = []
         if (req.query.search) {
@@ -43,6 +44,7 @@ exports.allCards = async (req, res, next) => {
 }
 
 exports.cardsFromSeries = async (req, res, next) => {
+    console.log("cfs");
     try {
         const stages = [];
         if (req.query.search) {
@@ -70,9 +72,30 @@ exports.cardsFromSeries = async (req, res, next) => {
 }
 
 exports.oneCard = async (req, res, next) => {
+    console.log("on");
     try {
         const card = await req.collection.findOne(req.params, req.body);
         res.send(card);
+    } catch (err) {
+        next(err);
+    }
+}
+
+
+exports.cardsFromIds = async (req, res, next) => {
+    const cardIds = req.params.ids.split("+");
+    console.log(cardIds);
+    try {
+        const stages = [];
+        stages.push({
+            $match: {
+                cardId: {
+                    $in: cardIds
+                }
+            }
+        })
+        cards = await req.collection.aggregate(stages).project(projection).toArray();
+        res.send(cards)
     } catch (err) {
         next(err);
     }
