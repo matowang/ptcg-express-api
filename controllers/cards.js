@@ -5,6 +5,7 @@ const projection = {
     supertype: 1,
     types: 1,
     series: 1,
+    price: 1,
     number: 1
 }
 
